@@ -1,5 +1,6 @@
 package com.lobodina.unscramblegame.ui_model
 
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,21 +30,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
 @Composable
-fun GameScreen (
+fun GameScreen(
     modifier: Modifier = Modifier,
     gameViewModel: GameViewModel = viewModel()
 ) {
     val gameUiState by gameViewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,10 +55,12 @@ fun GameScreen (
             style = MaterialTheme.typography.titleLarge,
             fontSize = 32.sp
         )
+
         GameStatus(
             wordCount = gameUiState.currentWordCount,
             score = gameUiState.score
         )
+
         GameLayout(
             currentScrambledWord = gameUiState.currentScrambledWord,
             userGuess = gameViewModel.userGuess,
@@ -67,8 +69,14 @@ fun GameScreen (
             isGuessWrong = gameUiState.isGuessedWordWrong,
             onSubmitClicked = { gameViewModel.checkUserGuess() },
             onSkipClicked = { gameViewModel.skipWord() }
-
         )
+
+        if (gameUiState.isGameOver) {
+            FinalScoreDialog(
+                score = gameUiState.score,
+                onPlayAgain = { gameViewModel.resetGame() }
+            )
+        }
     }
 }
 
@@ -102,8 +110,6 @@ fun GameStatus(
     }
 }
 
-
-
 @Composable
 fun GameLayout(
     currentScrambledWord: String,
@@ -111,12 +117,11 @@ fun GameLayout(
     onUserGuessChanged: (String) -> Unit,
     onKeyboardDone: () -> Unit,
     isGuessWrong: Boolean,
-    onSubmitClicked: () ->Unit,
-    onSkipClicked:() -> Unit,
+    onSubmitClicked: () -> Unit,
+    onSkipClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var userGuess by remember { mutableStateOf("") }
-
+    // Убираем локальную переменную userGuess, используем ту, что пришла из параметров
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -141,20 +146,22 @@ fun GameLayout(
                 )
             }
         }
+
         Text(
-            text ="Разгадайте слово",
-            style = MaterialTheme.typography.titleMedium
+            text = "Разгадайте слово",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
         )
+
         OutlinedTextField(
             value = userGuess,
             onValueChange = {
-                userGuess = it
                 onUserGuessChanged(it)
             },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Введите слово") },
-            isError= isGuessWrong,
+            isError = isGuessWrong,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
             ),
@@ -162,11 +169,13 @@ fun GameLayout(
                 onDone = { onKeyboardDone() }
             ),
         )
-        if(isGuessWrong){
+
+        if (isGuessWrong) {
             Text(
-                text ="Неправильно! Попробуйте ещё раз",
-                color= MaterialTheme.colorScheme.error,
-                style= MaterialTheme.typography.bodyMedium
+                text = "Неправильно! Попробуйте ещё раз",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
@@ -192,3 +201,31 @@ fun GameLayout(
     }
 }
 
+@Composable
+fun FinalScoreDialog(
+    score: Int,
+    onPlayAgain: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlertDialog(
+        onDismissRequest = { },
+        title = { Text(text = "Поздравляем!") },
+        text = {
+            Column {
+                Text(text = "Вы набрали:")
+                Text(
+                    text = "$score очков",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontSize = 36.sp
+                )
+            }
+        },
+        modifier = modifier,
+        dismissButton = {},
+        confirmButton = {
+            TextButton(onClick = onPlayAgain) {
+                Text(text = "Играть снова")
+            }
+        }
+    )
+}
