@@ -5,7 +5,7 @@ import com.lobodina.unscramblegame.data.GameUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
+//import com.lobodina.unscramblegame.data.allWords
 class GameViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(GameUiState())
@@ -19,7 +19,7 @@ class GameViewModel : ViewModel() {
     fun resetGame() {
         usedWords.clear()
         _uiState.value = GameUiState(
-            currentScrambledWord = pickRandomWordAndShuffle(),
+            currentScrambledWord = pickRandomWordAndShuffle()
         )
     }
     private fun shuffleCurrentWord(word: String): String {
